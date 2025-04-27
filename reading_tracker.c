@@ -2,74 +2,88 @@
 #include<string.h>
 #include<stdlib.h>
 #include<conio.h>
-//login function
+
+// Functions
 void account();
 int login();
-
-//option function
 int option();
+int option_1();
+int option_2();
+int option_3();
 
+//Global variable & fucntion
+char username[100];
+char file_current[120];
+char file_wishlist[120];
+char file_history[120];
+void fliename()
+{
+    sprintf(file_current, "%s_current_book.txt", username);
+    sprintf(file_wishlist, "%s_wishlist.txt", username);
+    sprintf(file_history, "%s_reading_history.txt", username);
+}
+
+//main function
 int main()
 {
     int st;
-    printf("due to privacy, you need log in first.\n\n press 1: If you don't have account\n press 2: log in\nEnter: ");
-    scanf("%d",&st);
-    if(st==1)
+    printf("Due to privacy, you need to log in first.\n\n");
+    printf("Press 1: If you don't have an account\n");
+    printf("Press 2: Log in\nEnter: ");
+    scanf("%d", &st);
+
+    if(st == 1)
         account();
-    else
+    else if(st == 2)
     {
-        if(login()==1)
+        if(login() == 1)
         {
             option();
         }
-
     }
+
+    else
+        printf("\nwrong input.\n");
 
     return 0;
 }
 
-//login function
+// Creating account
 void account()
 {
-    printf("create account:\nuser name(single name,lowercase): ");
-    //writing file
-    FILE *account;
-    account=fopen("account.txt","a");
-
-    //taking name
+    printf("Create account:\nUsername (lowercase, single word): ");
     char name[100];
-    scanf("%s",name);
-    fputs(name,account);
+    scanf("%s", name);
 
-    //taking pin
-    printf("create PIN (4 digit): ");
-    char pin[4];
-    scanf("%s",pin);
-    fputs(pin,account);
-    fprintf(account," ");
-    //closing file
+    printf("Create 4-digit PIN: ");
+    char pin[5];
+    scanf("%s", pin);
+
+    FILE *account = fopen("account.txt", "a");
+    fputs(name, account);
+    fputs(pin, account);
+    fprintf(account, " ");
     fclose(account);
-    printf("\nYour account successfully created.\n");
+
+    printf("\nYour account has been successfully created.\nPlease rerun code and login. THANK YOU!\n");
 }
 
-//login function
+// Login function
 int login()
 {
     char nam[100];
-    char cpynam[100];
-
-    //inputing name
-    printf("Enter user name: ");
-    scanf("%s",nam);
-    strcpy(cpynam,nam);
-
-    //inputing pin
     char pass[100];
-    printf("Enter PIN: ");
-    scanf("%s",pass);
 
-    //ading name and pin in one string
-    strcat(nam,pass);
+    printf("Enter username: ");
+    scanf("%s", nam);
+    //copy name into global variable
+    strcpy(username, nam);
+
+    printf("Enter PIN: ");
+    scanf("%s", pass);
+
+    //name&pin adding
+    strcat(nam, pass);
 
     //reading file
     FILE *account;
@@ -77,335 +91,439 @@ int login()
     char name[500];
     fgets(name, 500, account);
 
-    //finding name and pass
+    //checking name and pass
     if(strstr(name,nam)!=NULL)
     {
         system("cls");
-        printf("hey %s, choose an option:\n",cpynam);
+        printf("hey %s, choose an option:\n",username);
         return 1;
     }
     else
-        printf("your account is not found.");
+        printf("\nyour account is not found.\n");
 
     //closing file
     fclose(account);
 }
 
+// Main menu and logic
 
-
-int option() {
+int option()
+{
     int opt;
-    printf("\nSelect an option:\n");
-    printf("1: Current Book Status\n");
-    printf("2: Add book to Wishlist\n");
-    printf("3: Book Reading History\n");
-    printf("Enter your choice: ");
-    scanf("%d", &opt);
-    getchar(); // To consume the newline character after scanf
-
-    if (opt == 1) {
-        system("cls"); // Clear the screen (Note: This works in Windows, use system("clear") on Linux)
-
-        // Open the file to check if the user is reading a book
-        FILE *book = fopen("current_book.txt", "r");
-
-        if (book == NULL) {
-            // If file doesn't exist, show wishlist before asking to add a book
-            printf("You are not currently reading any book.\n");
-
-            // Show Wishlist
-            FILE *wishlist = fopen("wishlist.txt", "r");
-            if (wishlist == NULL) {
-                printf("Your wishlist is empty.\n");
-            } else {
-                char line[500];
-                printf("Your Wishlist:\n");
-                while (fgets(line, sizeof(line), wishlist)) {
-                    printf("%s", line);
-                }
-                fclose(wishlist);
-            }
-
-            printf("\nPlease add a new book:\n");
-
-            // Open file to write the new book information
-            book = fopen("current_book.txt", "w");
-
-            if (book == NULL) {
-                printf("Error opening file to write. Exiting.\n");
-                return 1;
-            }
-
-            // Taking book name
-            printf("Enter Book Name: ");
-            char booknam[100];
-            fgets(booknam, 100, stdin);
-            booknam[strcspn(booknam, "\n")] = '\0'; // Remove the newline
-
-            fprintf(book, "Book Name: %s\n", booknam);
-
-            // Taking author name
-            printf("Enter Author Name: ");
-            char authnam[100];
-            fgets(authnam, 100, stdin);
-            authnam[strcspn(authnam, "\n")] = '\0'; // Remove the newline
-
-            fprintf(book, "Author Name: %s\n", authnam);
-
-            // Taking page number
-            printf("Enter Page Number: ");
-            int page;
-            scanf("%d", &page);
-            fprintf(book, "Page Number: %d\n", page);
-
-            fclose(book); // Close the file after writing
-            printf("Book has been added successfully.\n");
-
-        } else {
-            // If file exists, read and display the current book details
-            char line[500];
-            int paused = 0;
-            int pausedPage = 0;
-            printf("Currently reading a book. Here are the details:\n");
-
-            while (fgets(line, sizeof(line), book)) {
-                printf("%s", line); // Print each line read from the file
-
-                // Check if the book is paused
-                if (strstr(line, "Paused at page:") != NULL) {
-                    paused = 1;
-                    sscanf(line, "Paused at page: %d", &pausedPage);
-                }
-            }
-
-            fclose(book); // Close the file after reading
-
-            if (paused) {
-                // If the reading was paused, display the page where it was paused
-                printf("\nReading was paused at page %d.\n", pausedPage);
-                printf("Select an option:\n");
-                printf("1: Resume Reading\n");
-                printf("2: Mark as Finished\n");
-                printf("3: Pause Reading\n");
-                int action;
-                scanf("%d", &action);
-
-                if (action == 1) {
-                    // Resume the reading from the paused page
-                    book = fopen("current_book.txt", "a");
-                    if (book == NULL) {
-                        printf("Error opening file for resuming. Exiting.\n");
-                        return 1;
-                    }
-                    fprintf(book, "Resumed from page: %d\n", pausedPage);
-                    fclose(book);
-                    printf("Resumed reading from page %d.\n", pausedPage);
-                } else if (action == 2) {
-                    // Mark as finished - Move to the history file
-                    FILE *history = fopen("reading_history.txt", "a");
-                    if (history == NULL) {
-                        printf("Error opening history file. Exiting.\n");
-                        return 1;
-                    }
-
-                    // Open the current book file again to get details
-                    book = fopen("current_book.txt", "r");
-                    if (book == NULL) {
-                        printf("Error opening current book file. Exiting.\n");
-                        return 1;
-                    }
-
-                    char bookDetails[500];
-                    while (fgets(bookDetails, sizeof(bookDetails), book)) {
-                        fputs(bookDetails, history);
-                    }
-
-                    fclose(book);
-                    fclose(history);
-
-                    // Delete current book file after saving to history
-                    remove("current_book.txt");
-                    printf("Book marked as finished.\n");
-
-                    // Ask for ratings and review
-                    printf("Please rate the book (1-5): ");
-                    int rating;
-                    scanf("%d", &rating);
-                    getchar();  // Clear the newline character
-
-                    printf("Please write a review for the book: ");
-                    char review[500];
-                    fgets(review, sizeof(review), stdin);
-                    review[strcspn(review, "\n")] = '\0'; // Remove the newline
-
-                    // Save rating and review in the history file
-                    history = fopen("reading_history.txt", "a");
-                    if (history == NULL) {
-                        printf("Error opening history file. Exiting.\n");
-                        return 1;
-                    }
-
-                    fprintf(history, "Rating: %d/5\n", rating);
-                    fprintf(history, "Review: %s\n", review);
-                    fclose(history);
-
-                    printf("Thank you for your review!\n");
-                } else if (action == 3) {
-                    // Pause reading again - Ask how many pages were read
-                    printf("Enter the page number you finished reading: ");
-                    int pageRead;
-                    scanf("%d", &pageRead);
-
-                    // Update the file with paused page number
-                    book = fopen("current_book.txt", "a");
-                    if (book == NULL) {
-                        printf("Error opening file to pause reading. Exiting.\n");
-                        return 1;
-                    }
-                    fprintf(book, "Paused at page: %d\n", pageRead);
-                    fclose(book);
-                    printf("Reading paused at page %d.\n", pageRead);
-                }
-            } else {
-                // If reading is not paused, give options to pause or finish
-                printf("\nSelect an option:\n");
-                printf("1: Mark as Finished\n");
-                printf("2: Pause Reading\n");
-                int action;
-                scanf("%d", &action);
-
-                if (action == 1) {
-                    // Mark as finished - Move to the history file
-                    FILE *history = fopen("reading_history.txt", "a");
-                    if (history == NULL) {
-                        printf("Error opening history file. Exiting.\n");
-                        return 1;
-                    }
-
-                    // Open the current book file again to get details
-                    book = fopen("current_book.txt", "r");
-                    if (book == NULL) {
-                        printf("Error opening current book file. Exiting.\n");
-                        return 1;
-                    }
-
-                    char bookDetails[500];
-                    while (fgets(bookDetails, sizeof(bookDetails), book)) {
-                        fputs(bookDetails, history);
-                    }
-
-                    fclose(book);
-                    fclose(history);
-
-                    // Delete current book file after saving to history
-                    remove("current_book.txt");
-                    printf("Book marked as finished.\n");
-
-                    // Ask for ratings and review
-                    printf("Please rate the book (1-5): ");
-                    int rating;
-                    scanf("%d", &rating);
-                    getchar();  // Clear the newline character
-
-                    printf("Please write a review for the book: ");
-                    char review[500];
-                    fgets(review, sizeof(review), stdin);
-                    review[strcspn(review, "\n")] = '\0'; // Remove the newline
-
-                    // Save rating and review in the history file
-                    history = fopen("reading_history.txt", "a");
-                    if (history == NULL) {
-                        printf("Error opening history file. Exiting.\n");
-                        return 1;
-                    }
-
-                    fprintf(history, "Rating: %d/5\n", rating);
-                    fprintf(history, "Review: %s\n", review);
-                    fclose(history);
-
-                    printf("Thank you for your review!\n");
-                } else if (action == 2) {
-                    // Pause reading - Ask how many pages were read
-                    printf("Enter the page number you finished reading: ");
-                    int pageRead;
-                    scanf("%d", &pageRead);
-
-                    // Update the file with paused page number
-                    book = fopen("current_book.txt", "a");
-                    if (book == NULL) {
-                        printf("Error opening file to pause reading. Exiting.\n");
-                        return 1;
-                    }
-                    fprintf(book, "Paused at page: %d\n", pageRead);
-                    fclose(book);
-                    printf("Reading paused at page %d.\n", pageRead);
-                }
-            }
-        }
-    }
-    else if (opt == 2) {
-        system("cls");
-
-        // Display Wishlist
-        FILE *wishlist = fopen("wishlist.txt", "r");
-        if (wishlist == NULL) {
-            printf("Your wishlist is empty.\n");
-        } else {
-            char line[500];
-            printf("Your Wishlist:\n");
-            while (fgets(line, sizeof(line), wishlist)) {
-                printf("%s", line);
-            }
-            fclose(wishlist);
-        }
-
-        // Ask if the user wants to add a new book to the wishlist
+    fliename();
 
 
-        // Ask if the user wants to add a new book to the wishlist
-        printf("\nWould you like to add a new book to your wishlist? (y/n): ");
-        char choice;
-        scanf(" %c", &choice);  // Ensure you have a space before %c to ignore any leftover newline characters
-        getchar();  // Consume any remaining newline character left in the input buffer
+    while (1)
+    {
+        printf("\n=== Main Menu ===\n");
+        printf("1: Current Book Status\n");
+        printf("2: Add Book to Wishlist\n");
+        printf("3: Book Reading History\n");
+        printf("4: Exit\n");
+        printf("Enter your choice: ");
+        scanf("%d", &opt);
+        getchar();
 
-        if (choice == 'y' || choice == 'Y')
+        if (opt == 1)
         {
-            FILE *wishlist = fopen("wishlist.txt", "a");
-            if (wishlist == NULL)
+            option_1();
+        }
+        else if (opt == 2)
+        {
+            option_2();
+        }
+        else if (opt == 3)
+        {
+            option_3();
+        }
+        else if (opt == 4)
+        {
+            printf("\n Goodbye!\n");
+            break;
+        }
+        else
+        {
+            printf("Invalid option.\n");
+            //last option
+            printf("\n0: Main Menu\n9: Exit\nEnter:");
+            int last;
+            scanf("%d",&last);
+            if(last==0)
+                system("cls");
+            else if(last==9)
             {
-                printf("Error opening wishlist file. Exiting.\n");
-                return 1;
+                printf("\n Goodbye!\n");
+                exit(0);
             }
-
-            char booknam[100], authnam[100];
-            int page;
-
-            // Taking book name
-            printf("Enter Book Name: ");
-            fgets(booknam, 100, stdin);
-            booknam[strcspn(booknam, "\n")] = '\0'; // Remove the newline
-
-            // Taking author name
-            printf("Enter Author Name: ");
-            fgets(authnam, 100, stdin);
-            authnam[strcspn(authnam, "\n")] = '\0'; // Remove the newline
-
-            // Taking page number
-            printf("Enter Page Number: ");
-            scanf("%d", &page);
-            getchar(); // Consume the newline left by scanf
-
-            fprintf(wishlist, "Book Name: %s\n", booknam);
-            fprintf(wishlist, "Author Name: %s\n", authnam);
-            fprintf(wishlist, "Page Number: %d\n\n", page);
-
-            fclose(wishlist);
-            printf("Book has been added to your wishlist.\n");
         }
     }
 }
 
+//sub function of option
+int option_1()
+{
+    system("cls");
+    FILE *book = fopen(file_current, "r");
+
+    if (book == NULL)
+    {
+        printf("You are not currently reading any book.\n");
+
+        FILE *wishlist = fopen(file_wishlist, "r");
+        if (wishlist)
+        {
+            char line[500];
+            printf("\nYour Wishlist:\n");
+            while (fgets(line, sizeof(line), wishlist))
+                printf("%s", line);
+            fclose(wishlist);
+        }
+        else
+            printf("Your wishlist is empty.\n");
+
+        printf("\nEnter 1: Add a new book\n\n0: Main Menu\n9: Exit\nEnter: ");
+        int choech;
+        scanf("%d",&choech);
+        getchar();
+        if(choech==1)
+        {
+            book = fopen(file_current, "w");
+            char booknam[100], authnam[100];
+            int page;
+
+            printf("Enter Book Name: ");
+            fgets(booknam, 100, stdin);
+            booknam[strcspn(booknam, "\n")] = '\0';
+
+            printf("Enter Author Name: ");
+            fgets(authnam, 100, stdin);
+            authnam[strcspn(authnam, "\n")] = '\0';
+
+            printf("Enter Page Number: ");
+            scanf("%d", &page);
+            getchar();
+
+            fprintf(book, "Book Name: %s\nAuthor Name: %s\nPage Number: %d\n", booknam, authnam, page);
+            fclose(book);
+
+            printf("Book has been added successfully.\n");
+            //last option
+            printf("\n0: Main Menu\n9: Exit\nEnter: ");
+            int last;
+            scanf("%d",&last);
+            if(last==0)
+                system("cls");
+            else if(last==9)
+            {
+                printf("\n Goodbye!\n");
+                exit(0);
+            }
+        }
+
+        //last option
+
+        else if(choech==0)
+            system("cls");
+        else if(choech==9)
+        {
+            printf("\n Goodbye!\n");
+            exit(0);
+        }
+        else
+        {
+            printf("wrong input.\n");
+            //last option
+            printf("\n0: Main Menu\n9: Exit\nEnter: ");
+            int last;
+            scanf("%d",&last);
+            if(last==0)
+                system("cls");
+            else if(last==9)
+            {
+                printf("\n Goodbye!\n");
+                exit(0);
+            }
+        }
+    }
+    else
+    {
+        char line[500];
+        int paused = 0, pausedPage = 0;
+        printf("Current Book Details:\n");
+        while (fgets(line, sizeof(line), book))
+        {
+            printf("%s", line);
+            if (strstr(line, "Paused at page:"))
+                sscanf(line, "Paused at page: %d", &pausedPage), paused = 1;
+        }
+        fclose(book);
+        printf("\nOptions:\n");
+        if (paused) printf("Enter 1: Resume Reading\n");
+        printf("Enter 2: Mark as Finished\n");
+        printf("Enter 3: Pause Reading\n");
+        printf("\n0: Main Menu\n9: Exit\nEnter: ");
+        int action;
+        scanf("%d", &action);
+        getchar();
+
+        if (paused && action == 1)
+        {
+            book = fopen(file_current, "a");
+            fprintf(book, "Resumed from page: %d\n", pausedPage);
+            fclose(book);
+            printf("Resumed reading from page %d.\n", pausedPage);
+
+            //last option
+            printf("\n0: Main Menu\n9: Exit\nEnter:");
+            int last;
+            scanf("%d",&last);
+            if(last==0)
+                system("cls");
+            else if(last==9)
+            {
+                printf("\n Goodbye!\n");
+                exit(0);
+            }
+        }
+        else if (action == 2)
+        {
+            FILE *history = fopen(file_history, "a");
+            book = fopen(file_current, "r");
+
+            char bookDetails[500];
+            while (fgets(bookDetails, sizeof(bookDetails), book))
+                fputs(bookDetails, history);
+            fclose(book);
+            fclose(history);
+
+            remove(file_current);
+            printf("Book marked as finished.\n");
+
+            printf("Rate the book (1-5): ");
+            int rating;
+            scanf("%d", &rating);
+            getchar();
+
+            printf("Write a review: ");
+            char review[500];
+            fgets(review, sizeof(review), stdin);
+            review[strcspn(review, "\n")] = '\0';
+
+            history = fopen(file_history, "a");
+            fprintf(history, "Rating: %d/5\nReview: %s\n\n", rating, review);
+            fclose(history);
+            //last option
+            printf("\n0: Main Menu\n9: Exit\nEnter:");
+            int last;
+            scanf("%d",&last);
+            if(last==0)
+                system("cls");
+            else if(last==9)
+            {
+                printf("\n Goodbye!\n");
+                exit(0);
+            }
+        }
+        else if (action == 3)
+        {
+            printf("Enter the page you paused at: ");
+            int page;
+            scanf("%d", &page);
+            getchar();
+
+            book = fopen(file_current, "a");
+            fprintf(book, "Paused at page: %d\n", page);
+            fclose(book);
+            printf("Reading paused at page %d.\n", page);
+            //last option
+            printf("\n0: Main Menu\n9: Exit\nEnter:");
+            int last;
+            scanf("%d",&last);
+            if(last==0)
+                system("cls");
+            else if(last==9)
+            {
+                printf("\n Goodbye!\n");
+                exit(0);
+            }
+        }
+        if(action==0)
+            system("cls");
+        else if(action==9)
+        {
+            printf("\n Goodbye!\n");
+            exit(0);
+        }
+    }
+}
+
+//sub function of option
+int option_2()
+{
+    system("cls");
+    FILE *wishlist = fopen(file_wishlist, "r");
+    if (wishlist!=NULL)
+    {
+        char line[500];
+        printf("Your Wishlist:\n");
+        while (fgets(line, sizeof(line), wishlist))
+            printf("%s", line);
+        fclose(wishlist);
+        printf("\nEnter 1: Add a book to your wishlist\nEnter 2: Remove all books from wishlist\n\n0: Main Menu\n9: Exit\nEnter:Please Enter: ");
+        int choice;
+        scanf(" %d", &choice);
+        getchar();
+        if (choice == 1)
+        {
+            wishlist = fopen(file_wishlist, "a");
+            char booknam[100], authnam[100];
+            int page;
+
+            printf("Enter Book Name: ");
+            fgets(booknam, 100, stdin);
+            booknam[strcspn(booknam, "\n")] = '\0';
+
+            printf("Enter Author Name: ");
+            fgets(authnam, 100, stdin);
+            authnam[strcspn(authnam, "\n")] = '\0';
+
+            printf("Enter Page Number: ");
+            scanf("%d", &page);
+            getchar();
+
+            fprintf(wishlist, "Book Name: %s\nAuthor Name: %s\nPage Number: %d\n\n", booknam, authnam, page);
+            fclose(wishlist);
+
+            printf("Book added to wishlist.");
+            //last option
+            printf("\n\n0: Main Menu\n9: Exit\nEnter:");
+            int last;
+            scanf("%d",&last);
+            if(last==0)
+                system("cls");
+            else if(last==9)
+            {
+                printf("\n Goodbye!\n");
+                exit(0);
+            }
+
+        }
+        else if(choice==2)
+        {
+            printf("\nSuccessfully Removed");
+            remove(file_wishlist);
+            //last option
+            printf("\n\n0: Main Menu\n9: Exit\nEnter:");
+            int last;
+            scanf("%d",&last);
+            if(last==0)
+                system("cls");
+            else if(last==9)
+            {
+                printf("\n Goodbye!\n");
+                exit(0);
+            }
+        }
+        //last option
+        if(choice==0)
+            system("cls");
+        else if(choice==9)
+        {
+            printf("\n Goodbye!\n");
+            exit(0);
+        }
+    }
+    else
+    {
+
+        printf("Your wishlist is empty.\n");
+
+        printf("\nEnter 1: Add a book to your wishlist\n\n0: Main Menu\n9: Exit\nPlease Enter: ");
+        int choice;
+        scanf(" %d", &choice);
+        getchar();
+        if (choice == 1)
+        {
+            wishlist = fopen(file_wishlist, "a");
+            char booknam[100], authnam[100];
+            int page;
+
+            printf("Enter Book Name: ");
+            fgets(booknam, 100, stdin);
+            booknam[strcspn(booknam, "\n")] = '\0';
+
+            printf("Enter Author Name: ");
+            fgets(authnam, 100, stdin);
+            authnam[strcspn(authnam, "\n")] = '\0';
+
+            printf("Enter Page Number: ");
+            scanf("%d", &page);
+            getchar();
+
+            fprintf(wishlist, "Book Name: %s\nAuthor Name: %s\nPage Number: %d\n\n", booknam, authnam, page);
+            fclose(wishlist);
+
+            printf("\nBook added to wishlist.\n");
+            //last option
+            printf("\n0: Main Menu\n9: Exit\nEnter:");
+            int last;
+            scanf("%d",&last);
+            if(last==0)
+                system("cls");
+            else if(last==9)
+            {
+                printf("\n Goodbye!\n");
+                exit(0);
+            }
+
+        }
+        else if(choice==0)
+            system("cls");
+        else if(choice==9)
+        {
+            printf("\n Goodbye!\n");
+            exit(0);
+        }
+        else
+            printf("Invalid Input.");
+    }
+
+}
+
+//sub function of option
+int option_3()
+{
+    system("cls");
 
 
+//Arnob Sarker's code start
+    FILE *history = fopen(file_history, "r");
+    if (history == NULL)
+    {
+        printf("No reading history found.\n");
+    }
+    else
+    {
+        char line[500];
+        printf("Reading History:\n");
+        while (fgets(line, sizeof(line), history))
+            printf("%s", line);
+        fclose(history);
+    }
+//Arnon Sarker's code end
 
+
+    //last option
+    printf("\n0: Main Menu\n9: Exit\nEnter:");
+    int last;
+    scanf("%d",&last);
+    if(last==0)
+        system("cls");
+    else if(last==9)
+    {
+        printf("\n Goodbye!\n");
+        exit(0);
+    }
+
+}
 
